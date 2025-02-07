@@ -161,22 +161,67 @@ myRouter.post("/v1/me/goals/:goalId/achieve", function (request, response) {
 myRouter.post(
   "/v1/me/goals/:goalId/challenge/:userId",
   function (request, response) {
-    // Find goal from id in url in list of goals
-    let goal = goals.find((goal) => {
-      return goal.id == request.params.goalId;
-    });
-    // Find the user who is being challenged in our list of users
-    let challengedUser = users.find((user) => {
-      return user.id == request.params.userId;
-    });
-    // Make sure the data being changed is valid
-    if (!goal) {
-      response.statusCode = 400;
-      return response.end("No goal with that ID found.");
+    try {
+      // Find goal from id in url in list of goals
+      let goal = goals.find((goal) => {
+        return goal.id == request.params.goalId;
+      });
+      // Find the user who is being challenged in our list of users
+      let challengedUser = users.find((user) => {
+        return user.id == request.params.userId;
+      });
+      // Make sure the data being changed is valid
+      if (!goal) {
+        response.statusCode = 400;
+        return response.end("No goal with that ID found.");
+      }
+      // Add the goal to the challenged user
+      challengedUser.challengedGoals.push(goal);
+      // No response needed other than a 200 success
+      return response.writeHead(200).end();
+    } catch (err) {
+      console.error("Error processing request:", err);
+      return response.end(
+        JSON.stringify({
+          code: 500,
+          message: "Internal server error",
+          fields: "unknown",
+        })
+      );
     }
-    // Add the goal to the challenged user
-    challengedUser.challengedGoals.push(goal);
-    // No response needed other than a 200 success
-    return response.end();
+  }
+);
+
+myRouter.post(
+  "/v1/me/goals/:goalId/gift/:userId",
+  function (request, response) {
+    try {
+      // Find goal from id in url in list of goals
+      let goal = goals.find((goal) => {
+        return goal.id == request.params.goalId;
+      });
+      // Find the user who is being gifted a goal in our list of users
+      let giftedUser = users.find((user) => {
+        return user.id == request.params.userId;
+      });
+      // Make sure the data being changed is valid
+      if (!goal) {
+        response.statusCode = 400;
+        return response.end("No goal with that ID found.");
+      }
+      // Add the goal to the gifted user
+      giftedUser.giftedGoals.push(goal);
+      // No response needed other than a 200 success
+      return response.writeHead(200).end();
+    } catch (err) {
+      console.error("Error processing request:", err);
+      return response.end(
+        JSON.stringify({
+          code: 500,
+          message: "Internal server error",
+          fields: "unknown",
+        })
+      );
+    }
   }
 );
