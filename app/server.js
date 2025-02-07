@@ -17,7 +17,7 @@ myRouter.use(bodyParser.json());
 
 // This function is a bit simpler...
 http
-  .createServer(function (request, response) {
+  .createServer((request, response) => {
     myRouter(request, response, finalHandler(request, response));
   })
   .listen(3002, () => {
@@ -33,7 +33,7 @@ http
   });
 
 // Notice how much cleaner these endpoint handlers are...
-myRouter.get("/v1/goals", function (request, response) {
+myRouter.get("/v1/goals", (request, response) => {
   // Get our query params from the query string
   const queryParams = queryString.parse(url.parse(request.url).query);
 
@@ -75,24 +75,87 @@ myRouter.get("/v1/goals", function (request, response) {
   }
 });
 
+myRouter.get("/v1/me", (request, response) => {
+  try {
+    return response.end(JSON.stringify(user));
+  } catch (err) {
+    console.error("Error processing request:", err);
+    return response.end(
+      JSON.stringify({
+        code: 500,
+        message: "Internal server error",
+        fields: "user",
+      })
+    );
+  }
+});
+
 // See how i'm not having to build up the raw data in the body... body parser just gives me the whole thing as an object.
 // See how the router automatically handled the path value and extracted the value for me to use?  How nice!
 myRouter.post("/v1/me/goals/:goalId/accept", function (request, response) {
   // Find goal from id in url in list of goals
-  let goal = goals.find((goal) => goal.id == request.params.goalId);
-  // Add it to our logged in user's accepted goals
-  user.acceptedGoals.push(goal);
-  // No response needed other than a 200 success
-  return response.end();
+  try {
+    let goal = goals.find((goal) => goal.id == request.params.goalId);
+    // Add it to our logged in user's accepted goals
+
+    if (!goal) {
+      return response
+        .writeHead(400, { "Content-Type": "application/json" })
+        .end(
+          JSON.stringify({
+            code: 400,
+            message: "Invalid goal specified",
+            fields: "goal",
+          })
+        );
+    }
+
+    user.acceptedGoals.push(goal);
+    // No response needed other than a 200 success
+    return response.writeHead(200).end();
+  } catch (err) {
+    console.error("Error processing this request:", err);
+    return response.end(
+      JSON.stringify({
+        code: 500,
+        message: "Internal server error",
+        fields: "unknown",
+      })
+    );
+  }
 });
 
 myRouter.post("/v1/me/goals/:goalId/achieve", function (request, response) {
   // Find goal from id in url in list of goals
-  let goal = goals.find((goal) => goal.id == request.params.goalId);
-  // Add it to our logged in user's accepted goals
-  user.acceptedGoals.push(goal);
-  // No response needed other than a 200 success
-  return response.end();
+  try {
+    let goal = goals.find((goal) => goal.id == request.params.goalId);
+    // Add it to our logged in user's accepted goals
+
+    if (!goal) {
+      return response
+        .writeHead(400, { "Content-Type": "application/json" })
+        .end(
+          JSON.stringify({
+            code: 400,
+            message: "Invalid goal specified",
+            fields: "goal",
+          })
+        );
+    }
+
+    user.achievedGoals.push(goal);
+    // No response needed other than a 200 success
+    return response.writeHead(200).end();
+  } catch (err) {
+    console.error("Error processing this request:", err);
+    return response.end(
+      JSON.stringify({
+        code: 500,
+        message: "Internal server error",
+        fields: "unknown",
+      })
+    );
+  }
 });
 
 myRouter.post(
